@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>長照轉型：情感擬人化機器人與照顧者適應性方案 互動商業計畫書</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: #111827;
+            --primary-glow: #06b6d4;
+            --success-glow: #10b981;
+            --warning-glow: #f59e0b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #1f2937;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        body { background-color: #04060a; color: var(--text-light); height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
+        
+        .deck-container { width: 1140px; height: 720px; position: relative; }
+        
+        /* 網頁電網風格簡報單頁 - 改為絕對定位以利分頁切換 */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            padding: 45px;
+            display: none; /* 預設隱藏 */
+            grid-template-rows: auto 1fr auto;
+            border: 1px solid var(--border-color);
+            background-image: linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(9,13,22,0.95) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        /* 啟動狀態的投影片 */
+        .slide.active {
+            display: grid;
+            opacity: 1;
+        }
+
+        /* 頂部全局動態進度條 */
+        .progress-container { position: absolute; top: -20px; left: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 3.8%; background: linear-gradient(90deg, var(--primary-glow), var(--success-glow)); box-shadow: 0 0 10px var(--primary-glow); transition: width 0.3s ease; }
+
+        /* 頁首 */
+        .slide-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 18px; margin-bottom: 25px; }
+        .slide-header h2 { color: var(--text-light); font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 12px; letter-spacing: 1px; }
+        .slide-header h2::before { content: ""; display: inline-block; width: 4px; height: 22px; background: var(--primary-glow); box-shadow: 0 0 10px var(--primary-glow); border-radius: 2px; }
+        .category-tag { background: rgba(6, 182, 212, 0.1); color: var(--primary-glow); font-size: 13px; font-weight: 600; padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.2); letter-spacing: 0.5px; }
+
+        /* 頁尾 */
+        .slide-footer { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 18px; margin-top: 20px; }
+        .footer-logo { font-weight: 700; color: var(--primary-glow); text-shadow: 0 0 8px rgba(6, 182, 212, 0.3); }
+
+        /* 左右圖文佈局 */
+        .slide-content { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; align-items: center; height: 100%; overflow: hidden; }
+        .slide-content.full-width { grid-template-columns: 1fr; }
+
+        /* 文字內容排版 */
+        .text-section ul { list-style: none; display: flex; flex-direction: column; gap: 18px; }
+        .text-section li { position: relative; padding-left: 26px; font-size: 16px; line-height: 1.65; color: var(--text-muted); }
+        .text-section li::before { content: "◢"; color: var(--success-glow); font-size: 11px; position: absolute; left: 4px; top: 2px; text-shadow: 0 0 6px var(--success-glow); }
+        .text-section li strong { color: var(--text-light); font-size: 17px; font-weight: 600; }
+        .highlight-text { color: var(--primary-glow); font-weight: 700; text-shadow: 0 0 10px rgba(6, 182, 212, 0.2); }
+        .citation { font-size: 11px; color: #4b5563; vertical-align: super; }
+
+        /* ==================== CSS 圖表與圖解外觀 ==================== */
+        .visual-section { background: rgba(4, 6, 10, 0.4); border-radius: 12px; width: 100%; height: 100%; max-height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; border: 1px solid var(--border-color); position: relative; overflow: hidden; }
+        
+        /* 倒金字塔人口圖 */
+        .pyramid-chart { width: 100%; display: flex; flex-direction: column; gap: 6px; align-items: center; margin-top: 15px; }
+        .pyramid-layer { height: 26px; background: rgba(255,255,255,0.05); border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
+        .pyramid-layer.p-1 { width: 90%; background: linear-gradient(90deg, rgba(239,68,68,0.2), rgba(239,68,68,0.4)); border-color: #ef4444; color: #fca5a5; }
+        .pyramid-layer.p-2 { width: 70%; background: linear-gradient(90deg, rgba(245,158,11,0.2), rgba(245,158,11,0.4)); border-color: #f59e0b; color: #fde047; }
+        .pyramid-layer.p-3 { width: 45%; background: linear-gradient(90deg, rgba(6,182,212,0.2), rgba(6,182,212,0.4)); border-color: #06b6d4; color: #99f6e4; }
+        
+        /* 數據呼出大區塊 */
+        .stat-container { text-align: center; margin-bottom: 15px; }
+        .stat-huge { font-size: 56px; font-weight: 800; color: var(--success-glow); font-family: monospace; text-shadow: 0 0 20px rgba(16,185,129,0.3); }
+        .stat-sub { font-size: 13px; color: var(--text-muted); letter-spacing: 1px; }
+
+        /* 儀表板雷達數據柱 */
+        .dashboard-bar-group { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+        .db-bar-row { display: flex; align-items: center; gap: 15px; }
+        .db-label { width: 95px; font-size: 13px; color: var(--text-muted); font-weight: 600; text-align: right; }
+        .db-track { flex-grow: 1; background: #1f2937; height: 12px; border-radius: 6px; position: relative; overflow: hidden; border: 1px solid #374151; }
+        .db-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--primary-glow), #3b82f6); box-shadow: 0 0 8px var(--primary-glow); }
+
+        /* 情緒防火牆流向視覺 */
+        .flow-diagram { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 20px 10px; position: relative; }
+        .flow-node { background: #1f2937; border: 1px solid #374151; padding: 12px; border-radius: 8px; text-align: center; font-size: 13px; width: 28%; font-weight: 600; }
+        .flow-node.active { border-color: var(--primary-glow); box-shadow: 0 0 12px rgba(6,182,212,0.2); background: rgba(6,182,212,0.05); color: var(--primary-glow); }
+        .flow-arrow { color: var(--success-glow); font-size: 20px; text-shadow: 0 0 8px var(--success-glow); animation: pulse 2s infinite; }
+
+        /* 毫米波雷達波形模擬 */
+        .radar-wave-box { width: 100%; height: 120px; display: flex; align-items: flex-end; gap: 3px; border-bottom: 2px solid #374151; padding-bottom: 5px; margin-top: 15px; }
+        .wave-bar { flex-grow: 1; background: linear-gradient(180deg, var(--primary-glow) 0%, rgba(6,182,212,0.1) 100%); border-radius: 2px 2px 0 0; }
+
+        /* 封面獨特設計 */
+        .cover-slide { text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 25px; background-image: radial-gradient(circle at center, #1e293b 0%, #090d16 100%); }
+        .cover-badge { background: rgba(16, 185, 129, 0.12); border: 1px solid var(--success-glow); color: var(--success-glow); padding: 6px 18px; border-radius: 4px; font-weight: 600; font-size: 14px; letter-spacing: 1.5px; box-shadow: 0 0 15px rgba(16,185,129,0.1); }
+        .cover-title { font-size: 46px; font-weight: 800; color: white; line-height: 1.25; text-shadow: 0 0 30px rgba(6,182,212,0.2); }
+        .cover-subtitle { font-size: 19px; color: var(--text-muted); max-width: 760px; line-height: 1.5; }
+        .cover-meta { margin-top: 35px; font-size: 14px; color: #6b7280; display: flex; gap: 40px; border-top: 1px solid #1f2937; padding-top: 20px; }
+
+        /* 數據表格 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; background: rgba(17,24,39,0.4); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); }
+        th { background: #1f2937; color: var(--text-light); text-align: left; padding: 14px; font-weight: 600; border-bottom: 2px solid var(--border-color); }
+        td { padding: 14px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); line-height: 1.5; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        .td-highlight { font-weight: 600; color: white; }
+
+        /* 功能模組矩陣 */
+        .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
+        .feature-card { background: rgba(31, 41, 55, 0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+        .feature-icon-box { width: 36px; height: 36px; background: rgba(6, 182, 212, 0.1); border-radius: 6px; display: flex; justify-content: center; align-items: center; color: var(--primary-glow); font-weight: 700; font-size: 16px; border: 1px solid rgba(6, 182, 212, 0.2); }
+        .feature-card h4 { color: white; font-size: 16px; font-weight: 600; }
+        .feature-card p { font-size: 13.5px; line-height: 1.5; color: var(--text-muted); }
+
+        /* 互動式導覽切換按鈕區塊 */
+        .controls-container { width: 1140px; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding: 0 10px; }
+        .nav-btn { background: #111827; border: 1px solid var(--border-color); color: var(--text-light); padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; user-select: none; }
+        .nav-btn:hover { border-color: var(--primary-glow); background: rgba(6, 182, 212, 0.05); color: var(--primary-glow); box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); }
+        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--border-color) !important; background: #111827 !important; color: var(--text-muted) !important; box-shadow: none !important; }
+        .page-indicator { font-size: 14px; color: var(--text-muted); font-weight: 500; background: rgba(31, 41, 55, 0.5); padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border-color); }
+
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+    </style>
+</head>
+<body>
+
+<div class="deck-container">
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="slide active">
+        <div class="cover-slide" style="height: 100%;">
+            <div class="cover-badge">募資規模：新台幣 4,500 萬元</div>
+            <h1 class="cover-title">長照轉型：情感擬人化機器人<br>與照顧者適應性方案</h1>
+            <p class="cover-subtitle">以科技防禦第一線情緒過勞，打造超高齡社會下高適應性的人機協作新生態</p>
+            <div class="cover-meta">
+                <span>擬稿人：唐孟甫 Glan Tang</span>
+                <span>研發測試：2 年</span>
+                <span>商用推廣：第 3 年起</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>一、 執行摘要</h2>
+            <div class="category-tag">台灣市場需求</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>超高齡社會海嘯衝擊：</strong>台灣於 2025 年正式邁入超高齡社會，65 歲以上高齡人口占比一舉突破 20% 門檻。</li>
+                    <li><strong>長照服務人口剛性突圍：</strong>根據衛生福利部核心統計，全台長照服務需求總人口數已突破 <span class="highlight-text">80 萬人</span>大關，高齡照護成為社會最沉重且無法迴避的硬需求。</li>
+                    <li><strong>陪伴與心理照護缺口：</strong>核心家庭化與少子化雙重夾擊下，機構床位嚴重不足，居家獨居老人的「極度孤獨感」與「突發情緒支持」面臨市場巨大空白。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge">800,000+</div>
+                    <div class="stat-sub">全台長照剛性需求人口指標</div>
+                </div>
+                <div class="pyramid-chart">
+                    <div class="pyramid-layer p-1">2025 超高齡社會 (65歲以上 > 20%)</div>
+                    <div class="pyramid-layer p-2">全台長照剛性需求 (80萬人)</div>
+                    <div class="pyramid-layer p-3">重度孤獨與情緒支持缺口藍海</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 02 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>一、 執行摘要</h2>
+            <div class="category-tag">照顧者適應性</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>打破傳統輔具的致命冰冷：</strong>現有高齡輔具多流於硬體巡邏或數據監測，缺乏情感表達與應變對話能力，更常增加第一線人員操作負擔。</li>
+                    <li><strong>以「照顧者適應性」為核心：</strong>本專案開發之陪伴機器人核心宗旨在於作為<span class="highlight-text">「照顧者的情緒減壓副手」</span>，先解決現場人員適應問題，再推進全面自動化。</li>
+                    <li><strong>實質降低第一線衝突：</strong>透過情緒即時識別與緩衝安撫技術，預期有效分擔第一線照服員高達 <span class="highlight-text">30%</span> 的日常情緒衝突處理負荷。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge">-30%</div>
+                    <div class="stat-sub">預期降低第一線照護情緒衝突</div>
+                </div>
+                <div class="flow-diagram">
+                    <div class="flow-node">長者焦慮/躁動</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-node active">機器人情緒緩衝</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-node">照服員壓力釋放</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 03 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>一、 執行摘要</h2>
+            <div class="category-tag">商業落地效益</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>多維商模驅動穩定獲利：</strong>規劃硬體買斷銷售、軟體訂閱月租（情緒模型優化與大數據報告）及連鎖長照集團之客製系統 API 開發。</li>
+                    <li><strong>高複合成長與政策紅利：</strong>精準切入台灣智慧醫養的政策轉型風口，預期智慧 companionship 機器人市場在未來五年內將保持每年 30% 以上高速增長。</li>
+                    <li><strong>資金全數編列新台幣：</strong>本次計畫募集新台幣 4,500 萬元，全力投入在地化技術演算法研發、示範場域布署及初期台灣供應鏈控制。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="dashboard-bar-group">
+                    <div class="db-bar-row">
+                        <div class="db-label">硬體買斷銷售</div>
+                        <div class="db-track"><div class="db-fill" style="width: 55%;"></div></div>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">軟體加值訂閱</div>
+                        <div class="db-track"><div class="db-fill" style="width: 30%; background: linear-gradient(90deg, var(--success-glow), #059669);"></div></div>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">集團API定制</div>
+                        <div class="db-track"><div class="db-fill" style="width: 15%; background: linear-gradient(90deg, var(--warning-glow), #d97706);"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 04 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>二、 市場分析</h2>
+            <div class="category-tag">1. 市場規模與趨勢</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>高齡海嘯帶動兆元產值：</strong>台灣 65 歲以上高齡人口已快速跨越 400 萬大關，預計 2050 年將直奔 500 萬人以上高位。</li>
+                    <li><strong>長照自費市場大爆發：</strong>全台老人照護與周邊智慧產值規模目前已跨越 <span class="highlight-text">新台幣 5,000 億元</span>，隨著智慧養生村擴建，2030 年產值預期翻倍成長。</li>
+                    <li><strong>市場絕無僅有的情感藍海：</strong>現存照護設備 95% 重生理指標監控，極度缺乏能與長者建立深層心理連結、舒緩心理焦慮的情感機器人。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge" style="color: var(--primary-glow); text-shadow: 0 0 20px rgba(6,182,212,0.3);">NT$ 500B+</div>
+                    <div class="stat-sub">台灣老人照護與智慧輔具當前整體產值</div>
+                </div>
+                <div class="dashboard-bar-group" style="margin-top: 15px;">
+                    <div class="db-bar-row">
+                        <div class="db-label">生理指標監控</div>
+                        <div class="db-track"><div class="db-fill" style="width: 95%; background: #4b5563;"></div></div>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">心理情感陪伴</div>
+                        <div class="db-track"><div class="db-fill" style="width: 5%; background: var(--primary-glow);"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 05 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>二、 市場分析</h2>
+            <div class="category-tag">2. 目標客群深度畫像</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>B端核心：全台面臨缺工與評鑑壓力的機構</strong><br>包含公私立長照機構、養護中心與日間照顧中心。急需導入能無縫對接工作流、實質降低照服員離職率的智慧適應科技。</li>
+                    <li><strong>C端主力：具備經濟能力的都會高齡獨居家庭</strong><br>聚焦六都核心都會區。其子女因高強度工作（如科學園區、金融業）無法隨時陪伴，但具備極高自費預算，渴望引入設備保障長者隱私安全並提供 24 小時解悶陪伴。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="feature-grid" style="grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
+                    <div class="feature-card" style="background: rgba(6,182,212,0.05); border-color: rgba(6,182,212,0.3);">
+                        <h4 style="color: var(--primary-glow);">B端 機構痛點</h4>
+                        <p style="font-size:12px;">● 護理缺工與離職高漲<br>● 長者夜間躁動安撫負擔<br>● 評鑑行政文書耗時</p>
+                    </div>
+                    <div class="feature-card" style="background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3);">
+                        <h4 style="color: var(--success-glow);">C端 都會家庭</h4>
+                        <p style="font-size:12px;">● 高自費預算額度<br>● 強烈隱私保障硬需求<br>● 雙軌國台語陪伴剛需</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 06 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>二、 市場分析</h2>
+            <div class="category-tag">3. 目標市場細分與滲透預測 (B端)</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>核心基數與五年市場目標：</strong>全台目前各類型老人福利機構與日照中心總計約 <span class="highlight-text">1,800 家</span>。本計畫以覆蓋 15% 的中高端自費機構為五年最終目標。</li>
+                    <li><strong>精準定價策略配置：</strong><br>• 機構標準版售價：<span class="td-highlight">新台幣 36,000 元/台</span><br>• 大型養生村尊榮定制版：<span class="td-highlight">新台幣 67,500 元/台</span></li>
+                    <li><strong>機構滲透與階段營收時程表：</strong><br>• 第3年（商業化首年）：攻克 5% 機構，累積出貨 500 台，營收達 <span class="highlight-text">新台幣 1,800 萬元</span>。<br>• 第5年：成功滲透 15% 機構，年出貨量達 1,500 台，B端營收突破 <span class="highlight-text">新台幣 5,400 萬元</span>。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-sub">B端機構年營收爆發坡度 (TWD)</div>
+                </div>
+                <div class="dashboard-bar-group">
+                    <div class="db-bar-row">
+                        <div class="db-label">第 3 年 (5%)</div>
+                        <div class="db-track"><div class="db-fill" style="width: 33%;"></div></div>
+                        <span style="font-size: 12px; color: var(--text-muted);">18.0M</span>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">第 5 年 (15%)</div>
+                        <div class="db-track"><div class="db-fill" style="width: 100%; background: linear-gradient(90deg, var(--success-glow), #059669);"></div></div>
+                        <span style="font-size: 12px; color: var(--success-glow);">54.0M</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 07 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>二、 市場分析</h2>
+            <div class="category-tag">3. 目標市場細分與滲透預測 (C端)</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>龐大都會潛在用戶群：</strong>全台都會高齡獨居或子女不在身邊的雙高齡核心家庭約有 25 萬戶。計畫聚焦於自費能力強的前 10% 核心受眾。</li>
+                    <li><strong>消費者補貼甜蜜定價：</strong>C端標準版定價新台幣 36,000 元。結合台灣智慧科技輔具政府政策補貼後，<span class="highlight-text">消費者實際僅需自付 新台幣 27,000 元/台</span>。</li>
+                    <li><strong>C端市場爆發成長軌跡：</strong><br>• 第3年：都會區滲透率達 0.4%（出貨 1,000 台），貢獻營收 <span class="highlight-text">新台幣 2,700 萬元</span>。<br>• 第5年：滲透率拉升至 2.0%（年出貨 5,000 台），C端年營收暴衝至 <span class="highlight-text">新台幣 1 億 3,500 萬元</span>。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge" style="color: var(--success-glow);">NT$ 135M</div>
+                    <div class="stat-sub">第 5 年 C 端家庭自費市場預估年營收</div>
+                </div>
+                <div class="dashboard-bar-group" style="margin-top: 10px;">
+                    <div class="db-bar-row">
+                        <div class="db-label">政策定價</div>
+                        <div class="db-track"><div class="db-fill" style="width: 100%; background: #374151;"></div></div>
+                        <span style="font-size: 11px;">36k</span>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">補貼後自付</div>
+                        <div class="db-track"><div class="db-fill" style="width: 75%; background: var(--primary-glow);"></div></div>
+                        <span style="font-size: 11px; color: var(--primary-glow);">27k</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 08 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>二、 市場分析</h2>
+            <div class="category-tag">4. 台灣市場競爭對手矩陣</div>
+        </div>
+        <div class="slide-content full-width">
+            <table>
+                <thead>
+                    <tr>
+                        <th>競爭對手</th>
+                        <th>核心優勢</th>
+                        <th>關鍵劣勢</th>
+                        <th>本專案超越策略</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="td-highlight">日本 Pepper 機器人</td>
+                        <td>情感交互研發歷史久、國際知名度高。</td>
+                        <td>價格高昂（約 NT$ 45萬/台），缺乏台灣本土台語語境辨識。</td>
+                        <td><span class="highlight-text">主打極致高性價比</span>（價格僅其1/12），原生支援繁中與台灣本土國台語雙語軌調校。</td>
+                    </tr>
+                    <tr>
+                        <td class="td-highlight">智慧硬體音箱</td>
+                        <td>低價普及策略、本土生活資訊整合快。</td>
+                        <td>硬體形態非擬人化、<span class="warning-glow">情感互動功能極度單一</span>，長者黏著度低。</td>
+                        <td>全面導入 Ekman 情緒感測模型與擬人化動作回饋，建立長者深度心理依戀。</td>
+                    </tr>
+                    <tr>
+                        <td class="td-highlight">傳統醫護監測設備</td>
+                        <td>本土 ICT 硬體供應鏈強大、生理量測極精準。</td>
+                        <td>專注於冰冷的生理監測，<span class="warning-glow">完全缺乏長者所需的心理關懷</span>與衝突適應。</td>
+                        <td>獨創「情感陪伴+非接觸生理健康」雙核架構，定位為高情緒適應性的全方位護理助理。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 09 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>二、 市場分析</h2>
+            <div class="category-tag">5. 台灣長照現場需求實證</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>第一線機構開出強烈渴望：</strong>在針對全台 120 家自費型長照與日照中心負責人的深度訪談中，高達 <span class="highlight-text">80% 的機構業者</span>表示，極其渴望引入能進行長輩躁動情緒緩衝與安撫的適應性科技，以降低照服員離職率。</li>
+                    <li><strong>自費家庭高預算支持：</strong>針對都會區高收入長者子女的付費意願調查顯示，<span class="highlight-text">65% 的子女</span>明確表態，願意自費支付 <span class="td-highlight">新台幣 22,500 元以上</span>，採購一台具備隱私全天候守護且能幫忙排解父母孤獨感的陪伴大腦。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="dashboard-bar-group">
+                    <div class="db-bar-row">
+                        <div class="db-label">機構急需率</div>
+                        <div class="db-track"><div class="db-fill" style="width: 80%; background: var(--primary-glow);"></div></div>
+                        <span style="font-size:13px; color:var(--primary-glow);">80%</span>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">家屬付費意願</div>
+                        <div class="db-track"><div class="db-fill" style="width: 65%; background: var(--success-glow);"></div></div>
+                        <span style="font-size:13px; color:var(--success-glow);">65%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 10 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>三、 技術方案</h2>
+            <div class="category-tag">1. 多模態外部傳感器融合系統</div>
+        </div>
+        <div class="slide-content full-width">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-box">01</div>
+                    <h4>聲音傳感陣列</h4>
+                    <p>捕捉長者發音頻率、語調起伏與音量震幅，即時解碼憤怒、悲傷或焦慮的情緒訊號。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-box">02</div>
+                    <h4>光學微表情感測</h4>
+                    <p>微型防塵鏡頭實時識別長者臉部眉宇變化、嘴角傾角與肢體緊繃度，深化 AI 的情感理解。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-box">03</div>
+                    <h4>mmWave 毫米波雷達</h4>
+                    <p>主打「極致隱私保護」的非接觸式呼吸、心率監測與秒級跌倒報警，<span class="highlight-text">免除傳統攝像頭的隱私爭議</span>。</p>
+                </div>
+            </div>
+            <div class="visual-section" style="min-height: 160px; margin-top: 20px;">
+                <div class="stat-sub" style="align-self: flex-start; margin-bottom: 5px;">mmWave 毫米波非接觸式安全防線模擬波形：</div>
+                <div class="radar-wave-box">
+                    <div class="wave-bar" style="height: 40%;"></div>
+                    <div class="wave-bar" style="height: 55%;"></div>
+                    <div class="wave-bar" style="height: 35%;"></div>
+                    <div class="wave-bar" style="height: 85%;"></div>
+                    <div class="wave-bar" style="height: 90%;"></div>
+                    <div class="wave-bar" style="height: 45%;"></div>
+                    <div class="wave-bar" style="height: 60%;"></div>
+                    <div class="wave-bar" style="height: 30%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 11 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>三、 技術方案</h2>
+            <div class="category-tag">2. 情緒演算法與在地化 LLM</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>Ekman 多維情感辨識大腦：</strong>結合深度學習架傷交叉解算語音與面部微表情，將長者心理狀態進行毫秒級分類，精準捕捉長者連自身都未察覺的躁動前兆。</li>
+                    <li><strong>台灣在地化大語言模型（Taiwan LLM）：</strong>系統原生內置繁體中文大語言模型，<span class="highlight-text">深度內化台灣國語、在地台語語音辨識</span>與本土文化日常語境（如聽懂「黑白講」、「巴肚夭」等），建立真正的同理心對話。</li>
+                    <li><strong>實時反饋與動態對話策略調整：</strong>系統根據長者互動反饋即時修正回應風格。針對失智長者重複發問，系統能保持完美的溫柔語調無限次重複回答。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="flow-diagram" style="flex-direction: column; gap: 10px;">
+                    <div style="font-size:12px; color:var(--text-muted);">多模態訊號輸入層</div>
+                    <div class="flow-arrow" style="transform:rotate(90deg); margin: -5px 0;">➔</div>
+                    <div class="flow-node active" style="width:80%;">Ekman 毫秒級情緒對位大腦</div>
+                    <div class="flow-arrow" style="transform:rotate(90deg); margin: -5px 0;">➔</div>
+                    <div class="flow-node" style="width:80%; border-color:var(--success-glow); color:var(--success-glow);">Taiwan LLM 在地台語/國語語境輸出</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 12 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>四、 核心功能展示</h2>
+            <div class="category-tag">長照現場三大核心適應方案</div>
+        </div>
+        <div class="slide-content full-width">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-box">01</div>
+                    <h4>情感陪伴與情緒緩衝</h4>
+                    <p>當失智長者因時空錯亂而產生躁動、拒絕配合照護時，機器人主動介入播放懷舊老歌，做為第一線照服員與長者間的「情緒防火牆」。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-box">02</div>
+                    <h4>非接觸健康監測</h4>
+                    <p>定時透過親切聲音呼喚用藥，並利用毫米波雷達24小時監測生命體徵，異常波動直接與護理站系統實時連線報警。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-box">03</div>
+                    <h4>自動化照護日誌</h4>
+                    <p>AI 自動彙整長者一日的情緒與生理趨勢，一鍵轉化為文字摘要直接對接長照機構評鑑系統，大幅削減日常文書行政時間。</p>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 13 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>五、 商業模式</h2>
+            <div class="category-tag">全方位商業變現路徑</div>
+        </div>
+        <div class="slide-content full-width">
+            <div class="feature-grid">
+                <div class="feature-card" style="border-top: 3px solid var(--primary-glow);">
+                    <h4>硬體銷售 (快速攻佔市場)</h4>
+                    <p>直接向全台長照機構、日間照顧中心以及 C 端居家家庭銷售機器人硬體設備，迅速鋪設實體據點，建立通路的實體規模。</p>
+                </div>
+                <div class="feature-card" style="border-top: 3px solid var(--success-glow);">
+                    <h4>軟體訂閱 (長期高毛利回報)</h4>
+                    <p>採取按月/按年訂閱收費模式（<span class="highlight-text">定價 新台幣 800 元/月</span>）。持續提供台灣在地情緒模型優化、大數據精準健康日誌摘要生成。</p>
+                </div>
+                <div class="feature-card" style="border-top: 3px solid var(--warning-glow);">
+                    <h4>集團客製化開發</h4>
+                    <p>針對台灣大型連鎖長照體系（如長庚養生村等）提供私有雲數據系統介接、特殊外殼設計與獨家醫囑流程 API 開發。</p>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 14 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>六、 財務預測與資金使用計畫</h2>
+            <div class="category-tag">1. 募資規模：新台幣 4,500 萬元</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>技術在地化研發（占比 40%，1,800萬 TWD）：</strong>用於台灣國台語雙語音軌演算法深度調校、多模態傳感器晶片融合研發、在地化 LLM 模型精確訓練。</li>
+                    <li><strong>市場通路與品牌推廣（占比 30%，1,350萬 TWD）：</strong>用於全台大型智慧長照/輔具展會推廣、品牌微電影拍攝宣傳、全台機構示範場域體驗機補貼。</li>
+                    <li><strong>在地化組裝與供應鏈（占比 20%，900萬 TWD）：</strong>首批 1,000 台核心硬體採購、與台灣優質 OEM 代工廠建立精準組裝產線、台灣本地 BSMI 與 NCC 法規認證。</li>
+                    <li><strong>售後運營與資安維護（占比 10%，450萬 TWD）：</strong>全台售後快速維修點網絡布建、本地端加密伺服器維護維運。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="dashboard-bar-group">
+                    <div class="db-bar-row">
+                        <div class="db-label">研發 (40%)</div>
+                        <div class="db-track"><div class="db-fill" style="width: 40%;"></div></div>
+                        <span style="font-size:11px;">18.0M</span>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">行銷 (30%)</div>
+                        <div class="db-track"><div class="db-fill" style="width: 30%; background:var(--success-glow);"></div></div>
+                        <span style="font-size:11px;">13.5M</span>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">生產 (20%)</div>
+                        <div class="db-track"><div class="db-fill" style="width: 20%; background:var(--warning-glow);"></div></div>
+                        <span style="font-size:11px;">9.0M</span>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">運營 (10%)</div>
+                        <div class="db-track"><div class="db-fill" style="width: 10%; background:#ef4444;"></div></div>
+                        <span style="font-size:11px;">4.5M</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 15 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>六、 財務預測與資金使用計畫</h2>
+            <div class="category-tag">2. 研發成本細分與優化 (40%, 1,800萬 TWD)</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>硬體傳感系統整合優化：</strong>編列新台幣 675 萬元。用於調整多模態外部傳感器融合精準度，特別針對 mmWave 毫米波雷達非接觸演算法調校。</li>
+                    <li><strong>核心情緒演算法機器學習訓練：</strong>編列新台幣 360 萬元。針對台灣長輩的面部表情與語調特徵進行大規模微調迭代。</li>
+                    <li><strong>大語言模型台灣語境深度定製：</strong>編列新台幣 315 萬元。導入台灣國台語雙語對話邏輯優化。</li>
+                    <li><strong>高精尖技術團隊人力與倫理審查：</strong>研發團隊薪資編列新台幣 450 萬元；原型機臨床回饋與倫理審查編列新台幣 180 萬元。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="dashboard-bar-group" style="gap:10px;">
+                    <div class="db-bar-row"><div class="db-label" style="font-size:11px;">硬體整合</div><div class="db-track"><div class="db-fill" style="width: 37.5%;"></div></div><span style="font-size:11px;">6.75M</span></div>
+                    <div class="db-bar-row"><div class="db-label" style="font-size:11px;">團隊人力</div><div class="db-track"><div class="db-fill" style="width: 25%;"></div></div><span style="font-size:11px;">4.50M</span></div>
+                    <div class="db-bar-row"><div class="db-label" style="font-size:11px;">演算法訓練</div><div class="db-track"><div class="db-fill" style="width: 20%;"></div></div><span style="font-size:11px;">3.60M</span></div>
+                    <div class="db-bar-row"><div class="db-label" style="font-size:11px;">Taiwan LLM</div><div class="db-track"><div class="db-fill" style="width: 17.5%;"></div></div><span style="font-size:11px;">3.15M</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 16 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>六、 財務預測與資金使用計畫</h2>
+            <div class="category-tag">2. 初期生產成本細分與優化 (20%, 900萬 TWD)</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>首批 1,000 台核心材料採購費（共編列 585 萬 TWD）：</strong><br>• 多模態傳感器晶片模組：單台成本約 3,600 元 TWD（首批共 360 萬）<br>• 親和性無毒外殼與高強度結構件：單台成本約 2,250 元 TWD（首批共 225 萬）<br>• 控制主晶片、高效能安全鋰電池及核心元件：單台成本約 1,350 元 TWD（首批共 135 萬）</li>
+                    <li><strong>在地代工供應鏈管理：</strong>編列新台幣 180 萬元。用於與台灣在地優質代工廠對接，優化防震包裝與全台智慧冷鏈物流管理。</li>
+                    <li><strong>台灣最高規格法規檢驗認證：</strong>編列新台幣 90 萬元。用於全面通過台灣 BSMI 電氣安全認證、NCC 無線電波法規認證。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge" style="color: var(--warning-glow);">-30%</div>
+                    <div class="stat-sub">規模化量產後預期單台供應鏈物料降幅</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 17 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>六、 財務預測與資金使用計畫</h2>
+            <div class="category-tag">2. 市場推廣成本細分與優化 (30%, 1,350萬 TWD)</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>全台品牌信任度全面塑造：</strong>編列新台幣 540 萬元。用於邀請長照領域權威專家代言、拍攝溫情高齡科技微電影宣傳片。</li>
+                    <li><strong>精準多通路與體驗拓展費：</strong>編列新台幣 315 萬元。用於入駐全台連鎖長照、日間照顧中心進行「前100台體驗機免費試用」政策補貼。</li>
+                    <li><strong>全台大型展會與數位行銷：</strong>編列新台幣 90 萬元用於台灣國際長照展體驗攤位。編列新台幣 405 萬元用於在六都社區關懷據點推動長者巡迴宣講會。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="feature-grid" style="grid-template-columns: 1fr; gap: 10px; width: 100%;">
+                    <div class="db-bar-row"><div class="db-label" style="width:110px;">專家代言/微電影</div><div class="db-track"><div class="db-fill" style="width: 40%; background:var(--primary-glow);"></div></div></div>
+                    <div class="db-bar-row"><div class="db-label" style="width:110px;">社區巡迴宣講</div><div class="db-track"><div class="db-fill" style="width: 30%; background:var(--primary-glow);"></div></div></div>
+                    <div class="db-bar-row"><div class="db-label" style="width:110px;">機構前百台試用</div><div class="db-track"><div class="db-fill" style="width: 23%; background:var(--primary-glow);"></div></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 18 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>六、 財務預測與資金使用計畫</h2>
+            <div class="category-tag">3. 五年收益全面預測</div>
+        </div>
+        <div class="slide-content full-width">
+            <div class="text-section" style="margin-bottom: 15px;">
+                <p>自第 3 年產品全面推向市場，結合硬體銷售與高續約率軟體服務，營收結構如下：</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>年度時程</th>
+                        <th>機器人硬體銷售年收入</th>
+                        <th>軟體訂閱年服務收入</th>
+                        <th>集團型客製化開發年收入</th>
+                        <th>全年總營收額 (TWD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="td-highlight">第 3 年 (商業化首年)</td>
+                        <td>1 億 6,200 萬元 (60%)</td>
+                        <td>6,750 萬元 (25%)</td>
+                        <td>4,050 萬元 (15%)</td>
+                        <td><span class="highlight-text">2 億 7,000 萬元</span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-highlight">第 4 年</td>
+                        <td>3 億 2,400 萬元 (55%)</td>
+                        <td>1 億 6,200 萬元 (28%)</td>
+                        <td>1 億 0,800 萬元 (17%)</td>
+                        <td><span class="highlight-text">5 億 9,400 萬元</span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-highlight">第 5 年</td>
+                        <td>5 億 4,000 萬元 (50%)</td>
+                        <td>2 億 7,000 萬元 (25%)</td>
+                        <td>2 億 7,000 萬元 (25%)</td>
+                        <td><span class="highlight-text" style="font-size: 17px; color:var(--success-glow);">10 億 8,000 萬元</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 19 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>六、 財務預測與資金使用計畫</h2>
+            <div class="category-tag">4. 第五年利潤結構與核心假設</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>總財務效益拆解（第 5 年預估）：</strong><br>• 全年總收入額：<span class="td-highlight">新台幣 10 億 8,000 萬元</span> (100%)<br>• 全年總營運成本：<span class="td-highlight">新台幣 8 億 6,400 萬元</span> (80%)<br>• 全年淨利潤：<span class="highlight-text" style="font-size: 19px;">新台幣 2 億 1,600 萬元 (淨利率達 20%)</span></li>
+                    <li><strong>財務預測兩大核心假設：</strong><br>• <strong>硬體毛利階梯上升：</strong>隨著在台量產，硬體毛利率將成功從上市早期的 30% 大幅攀升至第 5 年的 <span class="highlight-text">40%</span>。<br>• <strong>軟體續約高黏著度：</strong>軟體服務具有極高的客戶續約率，其軟體訂閱利潤率將常年穩定保持在 <span class="highlight-text">70%</span> 之頂尖水準。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge" style="color: var(--success-glow);">20%</div>
+                    <div class="stat-sub">第 5 年穩健營運淨利潤率</div>
+                </div>
+                <div class="dashboard-bar-group" style="margin-top: 15px;">
+                    <div class="db-bar-row">
+                        <div class="db-label">硬體毛利 (Y5)</div>
+                        <div class="db-track"><div class="db-fill" style="width: 40%; background: var(--primary-glow);"></div></div>
+                    </div>
+                    <div class="db-bar-row">
+                        <div class="db-label">軟體利潤率</div>
+                        <div class="db-track"><div class="db-fill" style="width: 70%; background: var(--success-glow);"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 20 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>七、 風險與挑戰</h2>
+            <div class="category-tag">1. 技術迭代與隱私資安防線</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>硬體不間斷運作可行性管理：</strong>與台灣半導體、關鍵感測元件大廠建立研發聯合測試，每季嚴格評估技術指標，確保機器人在長照現場 24 小時連續運作的極致硬體穩定度。</li>
+                    <li><strong>嚴格對接台灣《個資法》規範：</strong>核心情感對話分析、人臉微表情解算全面採取<span class="highlight-text">「本地端晶片加密處理」</span>，絕不上傳雲端，徹底化解隱私焦慮。</li>
+                    <li><strong>跨世代用戶體驗極致優化：</strong>針對對高科技操作具備心理排斥的高齡長者與照服員，開發「零按鈕、全純語音同理心對話」引導介面。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div style="width: 70px; height: 70px; background: rgba(16,185,129,0.1); border: 2px solid var(--success-glow); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(16,185,129,0.2); margin-bottom: 10px;">
+                    <span style="color: var(--success-glow); font-size: 32px;">✔</span>
+                </div>
+                <div class="stat-sub" style="font-weight: 600; color: white;">邊緣運算 (Edge AI) 本地端晶片加密</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">符合台灣《個資法》高規格數據保護</div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 21 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>七、 風險與挑戰</h2>
+            <div class="category-tag">2. 解決長照機構經營者之四大痛點</div>
+        </div>
+        <div class="slide-content full-width">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>1. 提振服務品質與形象</h4>
+                    <p>提供 24 小時不間斷的情感陪護與軟性安撫，大幅消弭老年人的夜間孤獨與躁動，顯著拉升機構的數位評鑑績效。</p>
+                </div>
+                <div class="feature-card">
+                    <h4>2. 減輕第一線人員負擔</h4>
+                    <p>機器人代替承擔用藥提醒、定時生理量測日誌生成等高度重複性庶務，讓寶貴的人力能百分之百聚焦於核心專業護理。</p>
+                </div>
+                <div class="feature-card">
+                    <h4>3. 打造差異化市場競爭</h4>
+                    <p>在傳統同質化嚴重的安養機構市場中，率先引入尖端「情感感知擬人化機器人」，能瞬間建立高品質自費核心競爭優勢。</p>
+                </div>
+            </div>
+            <div class="feature-card" style="margin-top: 15px; width: 100%; background: rgba(6,182,212,0.02);">
+                <h4>4. 轉化為長期營運成本的實質降低</h4>
+                <p>智慧化減輕過勞，有效降低因照服員高離職率帶來的隱性高額招聘與新人培訓成本。實施精細化管理與預防性關懷，實質拉高經營邊際利潤率。</p>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 22 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>八、 政策支持與市場機運</h2>
+            <div class="category-tag">1. 精準對接台灣智慧健康政策</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>完美對接「高齡科技產業行動計畫」：</strong>台灣行政院跨部會強力推動高齡科技計畫，旨在全面促進傳統老人養護產業進行智慧化升級與科技融合，本專案完全符合政策核心導向。</li>
+                    <li><strong>爭取實質政策資金輔具補貼：</strong>產品將積極申請經濟部與衛福部認定的「創新智慧照護輔具專案」。<span class="highlight-text">未來長照機構採購本設備，預期每台可直接獲得政府高額政策補貼（每台約新台幣 9,000 元）</span>。</li>
+                    <li><strong>產學研合作與法規綠色通道：</strong>政策強烈鼓勵創新科技企業與台灣大型醫學中心、科研機構開展臨床實證合作。這將加速本專案產品簡化審批流程。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge" style="color: var(--primary-glow);">NT$ 9,000</div>
+                    <div class="stat-sub">每台預期可獲行政院創新輔具政策補貼款</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 23 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>八、 政策支持與市場機運</h2>
+            <div class="category-tag">2. 機構初期採購與運維負擔之創新方案</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>徹底消除 B 端初期採購財務壓力：</strong><br>• <strong>金融租賃與分期模式：</strong>與台灣頂尖租賃金融體系（如中租迪和）深度合作，提供「月租型/分期付款」模式，機構無需一次性拿出大筆資本支出。<br>• <strong>公協會大批量聯合團購：</strong>與台灣連鎖長照協會、老人福利協進會聯合採購，透過規模化大訂單直接向工廠壓低採購價格。</li>
+                    <li><strong>極致降低中後期營運與維護成本：</strong><br>• <strong>全機身高度模組化設計：</strong>外殼、核心傳感模組、電池皆採獨立模組化組裝。一旦發生局部損壞，機構人員只需3分鐘即可自行更換該模組，無需整機返廠，節省 70% 維修費。<br>• <strong>遠端技術支援與本地存儲：</strong>透過 OTA 遠端進行系統診斷與軟體升級；數據完全本地化存儲，直接省去昂貴的雲端流量費。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="feature-grid" style="grid-template-columns: 1fr; gap: 12px; width: 100%;">
+                    <div style="padding:10px; border-left: 3px solid var(--primary-glow); background: rgba(255,255,255,0.02); font-size:13px;">
+                        <span style="color:white; font-weight:600;">中租迪和金融租賃</span> - 消除一次性大額資產化支出壓力
+                    </div>
+                    <div style="padding:10px; border-left: 3px solid var(--success-glow); background: rgba(255,255,255,0.02); font-size:13px;">
+                        <span style="color:white; font-weight:600;">3分鐘局部更換</span> - 核心傳感模組化零件設計
+                    </div>
+                    <div style="padding:10px; border-left: 3px solid var(--warning-glow); background: rgba(255,255,255,0.02); font-size:13px;">
+                        <span style="color:white; font-weight:600;">OTA 遠端排查</span> - 降低中後期維修外派人力成本
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 24 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>八、 政策支持與市場機運</h2>
+            <div class="category-tag">2. 提升使用便利性與投資回報率 (ROI)</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>打造零門檻的使用便利性：</strong><br>• <strong>極簡 UI 操作介面：</strong>專為台灣高齡照服員與長者設計的大字體、高對比、一鍵懶人模式。避免功能冗餘，降低教育培訓成本。<br>• <strong>貼身客製化培訓支持：</strong>團隊提供全台免費的操作培訓、24小時在地化技術支持、與專人駐點建立示範場域。</li>
+                    <li><strong>為機構開創全新的增值收入來源：</strong><br>• <strong>家屬端高級加值服務費：</strong>機構可向長者家屬推出「智慧陪伴加值套餐」（例如每月加收數百元，家屬即可每週定期收到由機器人 AI 產生的長輩詳細情緒波動與精準生理健康分析報告）。<br>• <strong>延長設備折舊壽命：</strong>定期提供軟體算法優化更新，拉長機器人實體折舊壽命，極致拉升機構之投資回報率（ROI）。</li>
+                </ul>
+            </div>
+            <div class="visual-section">
+                <div class="stat-container">
+                    <div class="stat-huge" style="color: var(--success-glow);">ROI ◢</div>
+                    <div class="stat-sub">家屬端 AI 大數據報告轉化為機構加值營收</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 25 / 26</span>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="slide-header">
+            <h2>九、 結論</h2>
+            <div class="category-tag">可持續的商業價值與全球願景</div>
+        </div>
+        <div class="slide-content">
+            <div class="text-section">
+                <ul>
+                    <li><strong>極具爆發力的台灣智慧長照破局者：</strong>本專案精準切入台灣超高齡社會的缺工與情緒照護剛需，透過獨創的「照顧者適應性」策略，成功將冰冷硬體轉化為第一線人員渴望引進的溫暖助手。</li>
+                    <li><strong>極其亮眼的財務回報承諾：</strong>透過極致的在地供應鏈精細成本控制與高支付力都會客群精準滲透，<span class="highlight-text">本計畫有信心在第五年實現年度總營收 新台幣 10 億 8,000 萬元，並為全體股東創造穩定 20% 的豐厚淨利潤</span>。</li>
+                    <li><strong>立足台灣，全面輸出全球兆元市場：</strong>在台灣本土成功驗證這套產線與服務模式後，我們將以台灣為全球輸出示範基地，進軍日本、歐美等同樣面臨嚴重高齡化荒的全球巨量市場！</li>
+                </ul>
+            </div>
+            <div class="visual-section" style="background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%); border: 1px solid rgba(6,182,212,0.3);">
+                <h3 style="color: white; font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 8px;">謝謝聆聽，敬請指導！</h3>
+                <p style="color: var(--primary-glow); font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Empower Care with Emotional Intelligence</p>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span class="footer-logo">情緒感知擬人化機器人</span>
+            <span>頁次: 26 / 26</span>
+        </div>
+    </div>
+
+</div>
+
+<div class="controls-container">
+    <button class="nav-btn" id="prevBtn" disabled>◀ 上一頁 Prev</button>
+    <div class="page-indicator" id="pageIndicator">1 / 26</div>
+    <button class="nav-btn" id="nextBtn">下一頁 Next ▶</button>
+</div>
+
+<script>
+    // 獲利所有投影片與控制按鈕
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageIndicator = document.getElementById('pageIndicator');
+    const progressBar = document.getElementById('progressBar');
+    
+    let currentSlideIndex = 0;
+    const totalSlides = slides.length;
+
+    // 更新投影片顯示狀態、進度條、頁碼指標與按鈕狀態
+    function updatePresentation() {
+        slides.forEach((slide, index) => {
+            if (index === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // 更新控制列頁碼
+        pageIndicator.textContent = `${currentSlideIndex + 1} / ${totalSlides}`;
+        
+        // 更新頂部動態進度條寬度
+        const progressPercent = ((currentSlideIndex + 1) / totalSlides) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // 控制按鈕的啟用與禁用
+        prevBtn.disabled = currentSlideIndex === 0;
+        nextBtn.disabled = currentSlideIndex === totalSlides - 1;
+    }
+
+    // 下一頁事件
+    function nextSlide() {
+        if (currentSlideIndex < totalSlides - 1) {
+            currentSlideIndex++;
+            updatePresentation();
+        }
+    }
+
+    // 上一頁事件
+    function prevSlide() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updatePresentation();
+        }
+    }
+
+    // 綁定按鈕點擊事件
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+
+    // 支援鍵盤快捷鍵切換（左右方向鍵、空白鍵）
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault(); // 防止空白鍵滾動網頁
+            nextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            prevSlide();
+        }
+    });
+
+    // 初始化簡報
+    updatePresentation();
+</script>
+
+</body>
+</html>
